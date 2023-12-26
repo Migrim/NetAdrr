@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Monitoring</title>
+    <style>
+        body {
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .computer {
+            border: 1px solid #333; /* Darker border for elements */
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #1e1e1e; /* Slightly lighter dark for the box */
+            border-radius: 8px;
+        }
+        h1 {
+            color: #0d47a1; /* Slightly brighter color for headings */
+        }
+        h2 {
+            color: #2196f3; /* Blue color for IP headings */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connected Computers</h1>
+        {% if computers %}
+            {% for ip, details in computers.items() %}
+                <div class="computer">
+                    <h2>IP: {{ ip }}</h2>
+                    {% if details %}
+                        <ul>
+                        {% for key, value in details.items() %}
+                            <li><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No details available for this computer.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No computers connected.</p>
+        {% endif %}
+    </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function fetchData() {
+        $.ajax({
+            url: "/fetch_data",  // Ensure this is the route in your Flask app for fetching data.
+            type: "GET",
+            success: function(data) {
+                // Assuming 'data' is a list of computer objects with IP and details
+                updatePage(data);
+            },
+            error: function(error) {
+                console.log("Error fetching data: ", error);
+            }
+        });
+    }
+
+    function updatePage(computers) {
+        // Clear the existing content
+        const container = $(".container");
+        container.empty();
+
+        // Add the header back in
+        container.append("<h1>Connected Computers</h1>");
+
+        // Iterate over each computer and update the content
+        if (computers.length > 0) {
+            computers.forEach(function(computer) {
+                const compDiv = $('<div class="computer"></div>');
+                compDiv.append(`<h2>IP: ${computer.ip}</h2>`);
+                const list = $("<ul></ul>");
+                Object.entries(computer.details).forEach(([key, value]) => {
+                    list.append(`<li><strong>${key}:</strong> ${value}</li>`);
+                });
+                compDiv.append(list);
+                container.append(compDiv);
+            });
+        } else {
+            container.append("<p>No computers connected.</p>");
+        }
+    }
+
+    $(document).ready(function() {
+        fetchData();  // Fetch data when the page loads
+        setInterval(fetchData, 5000);  // Poll every 5 seconds for new data
+    });
+</script>
+</html>
